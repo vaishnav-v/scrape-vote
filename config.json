@@ -1,0 +1,11 @@
+{
+  "port": 3000,
+  "concurrencyLimit": 5,
+  "staggerMinMs": 1000,
+  "staggerMaxMs": 4000,
+  "timeouts": {
+    "playwrightNav": 60000,
+    "ocrPipe": 7000,
+    "ocrCli": 15000
+  }
+}

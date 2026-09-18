@@ -1,0 +1,1855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kerala SEC Voters List Scraper Dashboard</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #090a0f;
+      --panel-dark: rgba(18, 20, 30, 0.7);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent-primary: #3b82f6;
+      --accent-success: #10b981;
+      --accent-warning: #f59e0b;
+      --accent-danger: #ef4444;
+      --card-gradient: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.8) 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0, transparent 50%),
+        radial-gradient(at 50% 0%, rgba(16, 185, 129, 0.05) 0, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(245, 158, 11, 0.05) 0, transparent 50%);
+      background-attachment: fixed;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(9, 10, 15, 0.8);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-icon {
+      width: 2.25rem;
+      height: 2.25rem;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-success));
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: white;
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    }
+
+    .logo-title h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #ffffff, #9ca3af);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo-title p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    button.btn {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 0.6rem 1.2rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    button.btn-primary {
+      background-color: var(--accent-primary);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
+
+    button.btn-primary:hover {
+      background-color: #2563eb;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+    }
+
+    button.btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+
+    button.btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .container {
+      max-width: 1350px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      width: 100%;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* Modals Styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal-content {
+      background: #11131e;
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      width: 550px;
+      max-width: 90%;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+      transform: scale(0.95);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.show .modal-content {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: white;
+    }
+
+    .close-modal-btn {
+      background: transparent;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .close-modal-btn:hover {
+      color: white;
+    }
+
+    .modal-body {
+      overflow-y: auto;
+      padding: 1.5rem;
+      flex-grow: 1;
+    }
+
+    /* Options Tree Styling */
+    .tree-root {
+      margin-top: 0.5rem;
+    }
+
+    .tree-node {
+      margin-left: 0.85rem;
+      border-left: 1px dashed rgba(255, 255, 255, 0.08);
+      padding-left: 0.75rem;
+      margin-top: 0.25rem;
+    }
+
+    .tree-node.collapsed-content {
+      display: none;
+    }
+
+    .tree-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.4rem 0.5rem;
+      border-radius: 0.35rem;
+      font-size: 0.825rem;
+      transition: background 0.15s;
+    }
+
+    .tree-header:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .tree-title-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      flex-grow: 1;
+      font-weight: 500;
+      min-width: 0;
+    }
+
+    .tree-caret {
+      width: 12px;
+      height: 12px;
+      fill: none;
+      stroke: var(--text-muted);
+      stroke-width: 2.5;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .tree-caret.collapsed {
+      transform: rotate(-90deg);
+    }
+
+    .tree-node-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 600;
+    }
+
+    .tree-leaf-title {
+      font-size: 0.775rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 320px;
+    }
+
+    .tree-leaf-title.downloaded {
+      color: var(--accent-success);
+      font-weight: 600;
+    }
+
+    .tree-leaf-title.active {
+      color: var(--accent-primary);
+      font-weight: 600;
+    }
+
+    .tree-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-shrink: 0;
+    }
+
+    .tree-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.2rem;
+      border-radius: 0.25rem;
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+
+    .tree-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+    }
+
+    .tree-btn-play {
+      color: var(--accent-success);
+    }
+
+    .tree-btn-play:hover {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      transform: scale(1.05);
+    }
+
+    .tree-status-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Stats Board */
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+
+    .stat-card {
+      background: var(--panel-dark);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+    }
+
+    .stat-card.completed::after { background-color: var(--accent-success); }
+    .stat-card.pending-captcha::after { background-color: var(--accent-warning); }
+    .stat-card.running::after { background-color: var(--accent-primary); }
+    .stat-card.failed::after { background-color: var(--accent-danger); }
+    .stat-card.queued::after { background-color: var(--text-muted); }
+
+    .stat-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Progress Section */
+    .progress-section {
+      background: var(--panel-dark);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.825rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .progress-bar-bg {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 99px;
+      height: 8px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      background: linear-gradient(90deg, var(--accent-primary), var(--accent-success));
+      border-radius: 99px;
+      height: 100%;
+      width: 0%;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Captcha Solve Section */
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-left: 3px solid var(--accent-primary);
+      padding-left: 0.75rem;
+    }
+
+    .captcha-solving-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .captcha-card {
+      background: var(--card-gradient);
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .captcha-card:focus-within {
+      border-color: rgba(59, 130, 246, 0.5);
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .captcha-header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-width: 0;
+    }
+
+    .captcha-tag-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .captcha-tag {
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: rgba(59, 130, 246, 0.15);
+      color: #93c5fd;
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.25rem;
+      text-transform: uppercase;
+    }
+
+    .captcha-info {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-main);
+      line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .captcha-info span {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .captcha-img-wrapper {
+      background: #ffffff;
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 70px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .captcha-img-wrapper img {
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .ocr-hint-box {
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px dashed rgba(59, 130, 246, 0.25);
+      border-radius: 0.5rem;
+      padding: 0.4rem 0.6rem;
+      font-size: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ocr-inspect-btn {
+      background: transparent;
+      border: none;
+      color: var(--accent-primary);
+      font-weight: 600;
+      font-size: 0.75rem;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .ocr-inspect-btn:hover {
+      color: #93c5fd;
+    }
+
+    .captcha-input-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .captcha-input {
+      flex-grow: 1;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 0.6rem 0.75rem;
+      color: white;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      letter-spacing: 0.1em;
+      text-align: center;
+      text-transform: uppercase;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .captcha-input:focus {
+      border-color: var(--accent-primary);
+    }
+
+    .captcha-card.wrong-captcha {
+      border-color: rgba(239, 68, 68, 0.4);
+      animation: shake 0.4s ease-in-out;
+    }
+
+    .captcha-error {
+      font-size: 0.75rem;
+      color: var(--accent-danger);
+      font-weight: 600;
+      text-align: center;
+    }
+
+    /* Tasks list table */
+    .tasks-panel {
+      background: var(--panel-dark);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin-top: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.875rem;
+    }
+
+    th {
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge-queued { background: rgba(156, 163, 175, 0.15); color: #d1d5db; }
+    .badge-running { background: rgba(59, 130, 246, 0.15); color: #93c5fd; }
+    .badge-ocr_solving { background: rgba(147, 51, 234, 0.15); color: #c084fc; }
+    .badge-awaiting_captcha { background: rgba(245, 158, 11, 0.15); color: #fde047; }
+    .badge-submitting { background: rgba(147, 51, 234, 0.15); color: #f3e8ff; }
+    .badge-completed { background: rgba(16, 185, 129, 0.15); color: #a7f3d0; }
+    .badge-failed { background: rgba(239, 68, 68, 0.15); color: #fecaca; }
+
+    .badge-ocr {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.25rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all 0.15s;
+    }
+
+    .badge-ocr:hover {
+      background: rgba(59, 130, 246, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .badge-ocr.auto-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-ocr.failed-auto {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-table-action {
+      background: transparent;
+      border: none;
+      color: var(--accent-primary);
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: underline;
+      font-size: 0.8rem;
+    }
+
+    .btn-table-action:hover {
+      color: #60a5fa;
+    }
+
+    .btn-download {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 0.35rem;
+      color: var(--accent-success);
+      font-weight: 600;
+      padding: 0.25rem 0.6rem;
+      text-decoration: none;
+      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .btn-download:hover {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+    }
+
+    .empty-solving {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px dashed var(--border-color);
+      border-radius: 1rem;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .empty-solving svg {
+      width: 2.5rem;
+      height: 2.5rem;
+      stroke: var(--text-muted);
+    }
+
+    /* Modal OCR Inspection */
+    .modal-ocr-preview {
+      background: #ffffff;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-ocr-preview img {
+      max-height: 85px;
+      object-fit: contain;
+    }
+
+    .ocr-detail-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .ocr-history-item {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ocr-history-item:last-child {
+      border-bottom: none;
+    }
+
+    /* Animations */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-4px); }
+      40%, 80% { transform: translateX(4px); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .pulse {
+      animation: pulse 1.5s infinite;
+    }
+
+    /* Toast Container */
+    #toast-container {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      z-index: 100;
+    }
+
+    .toast {
+      background: rgba(17, 24, 39, 0.95);
+      border-left: 4px solid var(--accent-primary);
+      border-top: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 1.25rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transform: translateX(120%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast.success { border-left-color: var(--accent-success); }
+    .toast.danger { border-left-color: var(--accent-danger); }
+    .toast.warning { border-left-color: var(--accent-warning); }
+
+    .audio-toggle {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.8rem;
+    }
+
+    .audio-toggle:hover {
+      color: var(--text-main);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon">V</div>
+      <div class="logo-title">
+        <h1>Voters List Scraper</h1>
+        <p>State Election Commission Kerala • EasyOCR Enabled • 10 Tabs</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="audio-toggle" id="audio-btn" onclick="toggleAudio()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" id="sound-icon-on">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" id="sound-icon-off" style="display: none;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zm10.764-6.35l3.3 3.3m0-3.3l-3.3 3.3" />
+        </svg>
+        <span id="sound-text">Sound: On</span>
+      </button>
+      <button class="btn btn-primary" onclick="openTreeModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7" />
+        </svg>
+        Choose Targets (Tree)
+      </button>
+      <button class="btn btn-primary" id="queue-btn" onclick="queueAllTasks()">Queue All 3,097 Tasks</button>
+      <button class="btn btn-secondary" onclick="retryAllFailed()">Retry All Failed</button>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Stats Row -->
+    <div class="stats-container" id="stats-board">
+      <div class="stat-card completed">
+        <div class="stat-label">Completed / Saved</div>
+        <div class="stat-value" id="stat-completed">0</div>
+      </div>
+      <div class="stat-card pending-captcha">
+        <div class="stat-label">Awaiting Manual Solve</div>
+        <div class="stat-value" id="stat-awaiting">0</div>
+      </div>
+      <div class="stat-card running">
+        <div class="stat-label">Active / OCR Solving</div>
+        <div class="stat-value" id="stat-running">0</div>
+      </div>
+      <div class="stat-card failed">
+        <div class="stat-label">Failed</div>
+        <div class="stat-value" id="stat-failed">0</div>
+      </div>
+      <div class="stat-card queued">
+        <div class="stat-label">Remaining</div>
+        <div class="stat-value" id="stat-queued">0</div>
+      </div>
+    </div>
+
+    <!-- Overall Queue Progress Bar -->
+    <div class="progress-section" id="progress-container" style="display: none;">
+      <div class="progress-header">
+        <span>Active Queue Progress</span>
+        <span id="progress-text">0% (0 / 0 Completed)</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-bar-fill"></div>
+      </div>
+    </div>
+
+    <!-- Active Captcha Solver Grid (Used for Manual Fallbacks) -->
+    <div>
+      <h2 class="section-title">Manual Verification Queue (Fallback)</h2>
+      <div class="captcha-solving-grid" id="solving-grid">
+        <!-- Dynamically filled -->
+      </div>
+    </div>
+
+    <!-- Master Job List Table -->
+    <div class="tasks-panel">
+      <h2 class="section-title">Active Queue Monitor</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 80px;">Task ID</th>
+              <th>Ward</th>
+              <th>Polling Station</th>
+              <th style="width: 140px;">Status</th>
+              <th style="width: 140px;">OCR Response</th>
+              <th style="width: 250px;">Result / File</th>
+              <th style="width: 100px;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="tasks-table-body">
+            <!-- Dynamically filled -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Collapsible Tree Popup Modal -->
+  <div class="modal-overlay" id="tree-modal" onclick="closeTreeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Choose Wards & Polling Stations</h2>
+        <button class="close-modal-btn" onclick="closeTreeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="tree-root" id="tree-container">
+          <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 1rem;">Loading tree...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Captcha & OCR Inspection Modal -->
+  <div class="modal-overlay" id="ocr-modal" onclick="closeOcrModal(event)">
+    <div class="modal-content" style="width: 580px;" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Captcha & EasyOCR Inspection</h2>
+        <button class="close-modal-btn" onclick="closeOcrModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="ocr-modal-body">
+        <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 2rem;">Loading OCR details...</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <!-- Audio feedback alert -->
+  <audio id="beep-alert" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-200.wav" preload="auto"></audio>
+
+  <script>
+    let currentTasks = [];
+    let treeData = {};
+    let prevCaptchaCount = 0;
+    let audioEnabled = true;
+
+    // Open/Close tree modal dialog
+    function openTreeModal() {
+      const modal = document.getElementById('tree-modal');
+      modal.classList.add('show');
+      loadTreeView();
+    }
+
+    function closeTreeModal(event) {
+      const modal = document.getElementById('tree-modal');
+      modal.classList.remove('show');
+    }
+
+    // Open/Close OCR inspection modal
+    function openOcrModal(taskId) {
+      const modal = document.getElementById('ocr-modal');
+      const modalBody = document.getElementById('ocr-modal-body');
+      modal.classList.add('show');
+      modalBody.innerHTML = '<p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 2rem;">Loading details...</p>';
+
+      fetch(`/api/task-ocr/${taskId}`)
+        .then(res => res.json())
+        .then(data => {
+          renderOcrModalContent(data);
+        })
+        .catch(err => {
+          modalBody.innerHTML = `<p style="color: var(--accent-danger); text-align: center;">Failed to load OCR details for Task #${taskId}</p>`;
+        });
+    }
+
+    function closeOcrModal(event) {
+      const modal = document.getElementById('ocr-modal');
+      modal.classList.remove('show');
+    }
+
+    function renderOcrModalContent(data) {
+      const modalBody = document.getElementById('ocr-modal-body');
+      const ocr = data.ocr || {};
+      const history = ocr.history || [];
+
+      let statusBadge = '';
+      if (ocr.status === 'auto_success') {
+        statusBadge = '<span class="badge badge-ocr auto-success">Auto-Solved Successfully</span>';
+      } else if (ocr.status === 'failed_auto') {
+        statusBadge = '<span class="badge badge-ocr failed-auto">OCR Failed (Manual Fallback)</span>';
+      } else if (ocr.status === 'manual_success') {
+        statusBadge = '<span class="badge badge-ocr auto-success">Solved Manually</span>';
+      } else {
+        statusBadge = `<span class="badge badge-${data.status}">${data.status}</span>`;
+      }
+
+      let imgHtml = ocr.lastImageUrl 
+        ? `<div class="modal-ocr-preview"><img src="${ocr.lastImageUrl}?t=${Date.now()}" alt="Captcha Image" /></div>`
+        : `<p style="color: var(--text-muted); text-align: center; padding: 1rem;">No captcha screenshot captured yet</p>`;
+
+      let historyHtml = '';
+      if (history.length > 0) {
+        historyHtml = `
+          <div style="margin-top: 1rem;">
+            <h4 style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">Attempt History</h4>
+            <div class="ocr-detail-card" style="padding: 0.5rem 1rem;">
+              ${history.map((h, i) => `
+                <div class="ocr-history-item">
+                  <span>Attempt #${i + 1}: <strong style="color: white; font-family: 'JetBrains Mono', monospace;">${h.predictedText || h.submittedText || '(empty)'}</strong> (${h.isManual ? 'Manual' : 'EasyOCR'})</span>
+                  <span style="color: ${h.status.includes('success') ? 'var(--accent-success)' : 'var(--accent-danger)'}; font-weight: 600;">${h.status}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      modalBody.innerHTML = `
+        <div style="margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-weight: 700; font-size: 1.1rem; color: white;">Task #${data.taskId}</span>
+            ${statusBadge}
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">${data.wardText} • ${data.pollingStationText}</p>
+        </div>
+
+        ${imgHtml}
+
+        <div class="ocr-detail-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-size: 0.8rem; color: var(--text-muted);">EasyOCR Prediction:</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: 800; color: #60a5fa; letter-spacing: 2px;">
+              ${ocr.lastPredictedText || 'None'}
+            </span>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">
+            Saved Image: <code style="color: #cbd5e1;">captchas/${ocr.lastImageFile || 'none'}</code>
+          </div>
+        </div>
+
+        ${historyHtml}
+      `;
+    }
+
+    // Toggle audio alerts
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      document.getElementById('sound-icon-on').style.display = audioEnabled ? 'inline' : 'none';
+      document.getElementById('sound-icon-off').style.display = audioEnabled ? 'none' : 'inline';
+      document.getElementById('sound-text').innerText = audioEnabled ? 'Sound: On' : 'Sound: Off';
+    }
+
+    function playBeep() {
+      if (audioEnabled) {
+        const audio = document.getElementById('beep-alert');
+        if (audio) {
+          audio.currentTime = 0;
+          audio.play().catch(() => {});
+        }
+      }
+    }
+
+    async function loadTasks() {
+      try {
+        const res = await fetch('/api/tasks');
+        const tasks = await res.json();
+        currentTasks = tasks;
+        
+        updateStats();
+        updateProgressBar();
+        renderSolvingGrid();
+        renderTasksTable();
+      } catch (err) {
+        console.error("Failed to load tasks:", err);
+      }
+    }
+
+    function updateProgressBar() {
+      const progressContainer = document.getElementById('progress-container');
+      const progressBarFill = document.getElementById('progress-bar-fill');
+      const progressText = document.getElementById('progress-text');
+
+      if (currentTasks.length === 0) {
+        progressContainer.style.display = 'none';
+        return;
+      }
+
+      progressContainer.style.display = 'flex';
+      const completed = currentTasks.filter(t => t.status === 'completed').length;
+      const total = currentTasks.length;
+      const percent = Math.round((completed / total) * 100);
+
+      progressBarFill.style.width = `${percent}%`;
+      progressText.innerText = `${percent}% (${completed} / ${total} Wards Completed)`;
+    }
+
+    async function loadTreeView() {
+      try {
+        const res = await fetch('/api/tree');
+        const data = await res.json();
+        treeData = data;
+        renderRootTree();
+      } catch (err) {
+        console.error("Failed to load tree view:", err);
+      }
+    }
+
+    function renderRootTree() {
+      const container = document.getElementById('tree-container');
+      if (container.querySelector('.tree-header')) {
+        updateTreeStatusMarkers();
+        return;
+      }
+      
+      container.innerHTML = '';
+
+      Object.keys(treeData).forEach(districtName => {
+        const distNode = createFolderNode(districtName, 'district', null, isNodeFullyDownloaded(treeData[districtName]), districtName);
+        const distContent = document.createElement('div');
+        distContent.className = 'tree-node';
+        distContent.id = `content-dist-${districtName}`;
+
+        const lBodies = treeData[districtName];
+        Object.keys(lBodies).forEach(lbName => {
+          const lbNode = createFolderNode(lbName, 'localbody', () => queueAllInLocalBody(lBodies[lbName]), isNodeFullyDownloaded(lBodies[lbName]), districtName + '/' + lbName);
+          const lbContent = document.createElement('div');
+          lbContent.className = 'tree-node collapsed-content';
+          lbContent.id = `content-lb-${lbName}`;
+
+          const titleWrapper = lbNode.querySelector('.tree-title-wrapper');
+          titleWrapper.addEventListener('click', () => {
+            const caret = titleWrapper.querySelector('.tree-caret');
+            caret.classList.toggle('collapsed');
+            lbContent.classList.toggle('collapsed-content');
+
+            if (!lbContent.classList.contains('collapsed-content') && lbContent.children.length === 0) {
+              renderWardsLazily(lbContent, lBodies[lbName]);
+            }
+          });
+
+          distContent.appendChild(lbNode);
+          distContent.appendChild(lbContent);
+        });
+
+        container.appendChild(distNode);
+        container.appendChild(distContent);
+      });
+    }
+
+    function renderWardsLazily(lbContent, WardsData) {
+      Object.keys(WardsData).forEach(wardName => {
+        const wardNode = createFolderNode(wardName, 'ward', () => queueAllInWard(WardsData[wardName]), isNodeFullyDownloaded(WardsData[wardName]), wardName);
+        const wardContent = document.createElement('div');
+        wardContent.className = 'tree-node collapsed-content';
+        const safeWardId = wardName.replace(/[^a-zA-Z0-9]/g, '_');
+        wardContent.id = `content-ward-${safeWardId}`;
+
+        const titleWrapper = wardNode.querySelector('.tree-title-wrapper');
+        titleWrapper.addEventListener('click', () => {
+          const caret = titleWrapper.querySelector('.tree-caret');
+          caret.classList.toggle('collapsed');
+          wardContent.classList.toggle('collapsed-content');
+
+          if (!wardContent.classList.contains('collapsed-content') && wardContent.children.length === 0) {
+            renderPollingStationsLazily(wardContent, WardsData[wardName]);
+          }
+        });
+
+        lbContent.appendChild(wardNode);
+        lbContent.appendChild(wardContent);
+      });
+    }
+
+    function renderPollingStationsLazily(wardContent, psList) {
+      psList.forEach(ps => {
+        const leafNode = createLeafNode(ps);
+        wardContent.appendChild(leafNode);
+      });
+    }
+
+    function isNodeFullyDownloaded(nodeData) {
+      if (Array.isArray(nodeData)) return nodeData.length > 0 && nodeData.every(ps => ps.status === 'downloaded');
+      const keys = Object.keys(nodeData);
+      if (keys.length === 0) return false;
+      for (const key of keys) {
+        if (!isNodeFullyDownloaded(nodeData[key])) return false;
+      }
+      return true;
+    }
+
+    function updateTreeStatusMarkers() {
+      const leafElements = document.querySelectorAll('[data-leaf-key]');
+      leafElements.forEach(el => {
+        const key = el.dataset.leafKey;
+        const ps = findPollingStationByValues(key);
+        if (ps) {
+          const oldStatus = el.dataset.status;
+          if (oldStatus !== ps.status) {
+            el.dataset.status = ps.status;
+            
+            const statusIndicator = el.querySelector('.tree-status-indicator');
+            const actionsDiv = el.querySelector('.tree-actions');
+            
+            if (ps.status === 'downloaded') {
+              statusIndicator.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+              `;
+              statusIndicator.style.color = 'var(--accent-success)';
+              actionsDiv.innerHTML = `
+                <div class="tree-status-indicator" style="color: var(--accent-success);" title="Saved to Excel">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                  </svg>
+                </div>
+                <a class="tree-btn" href="/downloads/${ps.fileName}" target="_blank" title="Download Excel file">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                  </svg>
+                </a>
+              `;
+              el.querySelector('.tree-leaf-title').className = 'tree-leaf-title downloaded';
+            } else if (ps.status !== 'idle' && ps.status !== 'failed') {
+              statusIndicator.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" style="animation: spin 1s linear infinite;">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89"/>
+                </svg>
+              `;
+              statusIndicator.style.color = 'var(--accent-primary)';
+              actionsDiv.innerHTML = `
+                <div class="tree-status-indicator pulse" style="color: var(--accent-primary);" title="Scraping in progress">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" style="animation: spin 1s linear infinite;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89"/>
+                  </svg>
+                </div>
+                <span style="font-size: 0.7rem; color: var(--text-muted); padding-right: 0.25rem;">Active</span>
+              `;
+              el.querySelector('.tree-leaf-title').className = 'tree-leaf-title active';
+            } else {
+              statusIndicator.innerHTML = '';
+              actionsDiv.innerHTML = `
+                <div class="tree-status-indicator"></div>
+                <button class="tree-btn tree-btn-play" title="Queue this polling station" onclick="queueSingleItem('${ps.wardValue}', '${ps.pollingStationValue}')">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+              `;
+              el.querySelector('.tree-leaf-title').className = 'tree-leaf-title';
+            }
+          }
+        }
+      });
+      
+      const folderElements = document.querySelectorAll('.folder-node[data-path]');
+      folderElements.forEach(el => {
+        const pathParts = el.dataset.path.split('/');
+        let nodeData = treeData;
+        for (const p of pathParts) {
+           if (nodeData[p]) nodeData = nodeData[p];
+           else { nodeData = null; break; }
+        }
+        if (nodeData) {
+          const isFull = isNodeFullyDownloaded(nodeData);
+          const wrapper = el.querySelector('.tree-title-wrapper');
+          const existingTick = wrapper.querySelector('.folder-tick');
+          if (isFull && !existingTick) {
+            wrapper.insertAdjacentHTML('beforeend', '<svg class="folder-tick" style="color: var(--accent-success); width: 14px; margin-left: 6px; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>');
+          } else if (!isFull && existingTick) {
+            existingTick.remove();
+          }
+        }
+      });
+    }
+
+    function findPollingStationByValues(key) {
+      const parts = key.split('_');
+      const wardValue = parts[0];
+      const psValue = parts[1];
+
+      for (const dist of Object.values(treeData)) {
+        for (const lb of Object.values(dist)) {
+          for (const ward of Object.values(lb)) {
+            const found = ward.find(ps => ps.wardValue === wardValue && ps.pollingStationValue === psValue);
+            if (found) return found;
+          }
+        }
+      }
+      return null;
+    }
+
+    function createFolderNode(name, type, playAction = null, isFullyDownloaded = false, nodePath = '') {
+      const div = document.createElement('div');
+      div.className = 'tree-header';
+      const safeId = name.replace(/[^a-zA-Z0-9]/g, '_');
+      const tickHtml = isFullyDownloaded ? '<svg class="folder-tick" style="color: var(--accent-success); width: 14px; margin-left: 6px; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>' : '';
+      
+      let playBtnHTML = '';
+      if (playAction) {
+        playBtnHTML = `
+          <button class="tree-btn tree-btn-play" title="Queue all under this node">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+        `;
+      }
+
+      div.innerHTML = `
+        <div class="tree-title-wrapper" data-toggle="${type}-${safeId}">
+          <svg class="tree-caret collapsed" viewBox="0 0 24 24">
+            <path d="M19 9l-7 7-7-7" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="tree-node-title">${name}</span>${tickHtml}
+        </div>
+        <div class="tree-actions">
+          ${playBtnHTML}
+        </div>
+      `;
+
+      if (playAction) {
+        const playBtn = div.querySelector('.tree-btn-play');
+        playBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          playAction();
+        });
+      }
+
+      return div;
+    }
+
+    function createLeafNode(ps) {
+      const div = document.createElement('div');
+      div.className = 'tree-header';
+      div.dataset.leafKey = `${ps.wardValue}_${ps.pollingStationValue}`;
+      div.dataset.status = ps.status;
+      
+      let statusIconHTML = '';
+      let actionBtnHTML = '';
+
+      if (ps.status === 'downloaded') {
+        statusIconHTML = `
+          <div class="tree-status-indicator" style="color: var(--accent-success);" title="Saved to Excel">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+        `;
+        actionBtnHTML = `
+          <a class="tree-btn" href="/downloads/${ps.fileName}" target="_blank" title="Download Excel file">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+          </a>
+        `;
+      } else if (ps.status !== 'idle' && ps.status !== 'failed') {
+        statusIconHTML = `
+          <div class="tree-status-indicator pulse" style="color: var(--accent-primary);" title="Scraping in progress">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" style="animation: spin 1s linear infinite;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89"/>
+            </svg>
+          </div>
+        `;
+        actionBtnHTML = `<span style="font-size: 0.7rem; color: var(--text-muted); padding-right: 0.25rem;">Active</span>`;
+      } else {
+        actionBtnHTML = `
+          <button class="tree-btn tree-btn-play" title="Queue this polling station" onclick="queueSingleItem('${ps.wardValue}', '${ps.pollingStationValue}')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+        `;
+      }
+
+      div.innerHTML = `
+        <div class="tree-title-wrapper" style="cursor: default;">
+          <span class="tree-leaf-title ${ps.status === 'downloaded' ? 'downloaded' : (ps.status !== 'idle' ? 'active' : '')}" title="${ps.pollingStationText}">
+            ${ps.pollingStationText}
+          </span>
+        </div>
+        <div class="tree-actions">
+          <div class="tree-status-indicator">${statusIconHTML}</div>
+          ${actionBtnHTML}
+        </div>
+      `;
+
+      return div;
+    }
+
+    async function queueSingleItem(wardValue, pollingStationValue) {
+      try {
+        const res = await fetch('/api/queue-items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: [{ wardValue, pollingStationValue }] })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Task added to active queue`, "success");
+          loadTasks();
+          loadTreeView();
+        }
+      } catch (err) {
+        showToast("Failed to queue item", "danger");
+      }
+    }
+
+    async function queueAllInLocalBody(localBodyWards) {
+      const itemsToQueue = [];
+      Object.keys(localBodyWards).forEach(wardName => {
+        const psList = localBodyWards[wardName];
+        psList.forEach(ps => {
+          if (ps.status === 'idle' || ps.status === 'failed') {
+            itemsToQueue.push({
+              wardValue: ps.wardValue,
+              pollingStationValue: ps.pollingStationValue
+            });
+          }
+        });
+      });
+
+      queueBatch(itemsToQueue);
+    }
+
+    async function queueAllInWard(psList) {
+      const itemsToQueue = [];
+      psList.forEach(ps => {
+        if (ps.status === 'idle' || ps.status === 'failed') {
+          itemsToQueue.push({
+            wardValue: ps.wardValue,
+            pollingStationValue: ps.pollingStationValue
+          });
+        }
+      });
+
+      queueBatch(itemsToQueue);
+    }
+
+    async function queueBatch(itemsToQueue) {
+      if (itemsToQueue.length === 0) {
+        showToast("All items are already queued or downloaded!", "warning");
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/queue-items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: itemsToQueue })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Queued ${data.addedCount} tasks successfully!`, "success");
+          loadTasks();
+          loadTreeView();
+        }
+      } catch (err) {
+        showToast("Error adding items to queue", "danger");
+      }
+    }
+
+    function updateStats() {
+      const completed = currentTasks.filter(t => t.status === 'completed').length;
+      const awaiting = currentTasks.filter(t => t.status === 'awaiting_captcha').length;
+      const running = currentTasks.filter(t => t.status === 'running' || t.status === 'submitting' || t.status === 'ocr_solving').length;
+      const failed = currentTasks.filter(t => t.status === 'failed').length;
+      const queued = currentTasks.filter(t => t.status === 'queued').length;
+
+      document.getElementById('stat-completed').innerText = completed;
+      document.getElementById('stat-awaiting').innerText = awaiting;
+      document.getElementById('stat-running').innerText = running;
+      document.getElementById('stat-failed').innerText = failed;
+      document.getElementById('stat-queued').innerText = queued;
+
+      if (awaiting > prevCaptchaCount) {
+        playBeep();
+        showToast("Manual captcha verification needed!", "warning");
+        loadTreeView();
+      }
+      prevCaptchaCount = awaiting;
+    }
+
+    // Reconciled DOM renderer: Prevents destroying active inputs while user is typing
+    function renderSolvingGrid() {
+      const grid = document.getElementById('solving-grid');
+      const awaitingTasks = currentTasks.filter(t => t.status === 'awaiting_captcha');
+
+      if (awaitingTasks.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-solving" style="grid-column: 1 / -1;">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <h3>No captchas awaiting manual input</h3>
+              <p style="font-size: 0.85rem; margin-top: 0.25rem;">EasyOCR solves captchas automatically! Any rejected captchas will appear here for manual confirmation.</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const emptyDiv = grid.querySelector('.empty-solving');
+      if (emptyDiv) {
+        emptyDiv.remove();
+      }
+
+      const activeIds = new Set(awaitingTasks.map(t => String(t.id)));
+
+      // 1. Remove solved cards
+      const existingCards = Array.from(grid.querySelectorAll('.captcha-card'));
+      existingCards.forEach(card => {
+        const id = card.dataset.id;
+        if (!activeIds.has(id)) {
+          card.remove();
+        }
+      });
+
+      // 2. Add or update cards
+      awaitingTasks.forEach(task => {
+        const idStr = String(task.id);
+        let card = grid.querySelector(`.captcha-card[data-id="${idStr}"]`);
+        const ocrText = task.ocr?.lastPredictedText || '';
+
+        if (!card) {
+          card = document.createElement('div');
+          card.className = 'captcha-card';
+          card.dataset.id = idStr;
+
+          card.innerHTML = `
+            <div class="captcha-header">
+              <div class="captcha-tag-row">
+                <span class="captcha-tag">Task #${task.id}</span>
+                <button class="ocr-inspect-btn" onclick="openOcrModal(${task.id})">Inspect OCR 🔍</button>
+              </div>
+              <div class="captcha-info" title="${task.wardText}">
+                ${task.wardText}
+                <span title="${task.pollingStationText}">${task.pollingStationText}</span>
+              </div>
+            </div>
+            <div class="captcha-img-wrapper">
+              <img src="/api/captcha/${task.id}?t=${Date.now()}" alt="Captcha Image" />
+            </div>
+            ${ocrText ? `
+              <div class="ocr-hint-box">
+                <span>OCR Suggestion: <strong style="color: #60a5fa; font-family: 'JetBrains Mono', monospace; letter-spacing: 1px;">${ocrText}</strong></span>
+                <span style="font-size: 0.7rem; color: var(--text-muted);">(Pre-filled)</span>
+              </div>
+            ` : ''}
+            <div class="captcha-error"></div>
+            <div class="captcha-input-group">
+              <input type="text" class="captcha-input" maxlength="10" placeholder="Type text" value="${ocrText}" onkeydown="handleInputKeydown(event, ${task.id})" />
+              <button class="btn btn-primary" style="padding: 0.5rem 1rem;" onclick="submitCaptcha(${task.id})">Solve</button>
+            </div>
+          `;
+          grid.appendChild(card);
+        }
+
+        const img = card.querySelector('.captcha-img-wrapper img');
+        const errDiv = card.querySelector('.captcha-error');
+
+        if (task.error) {
+          if (errDiv.innerText !== task.error) {
+            errDiv.innerText = task.error;
+            card.classList.add('wrong-captcha');
+            img.src = `/api/captcha/${task.id}?t=${Date.now()}`;
+            
+            const input = card.querySelector('.captcha-input');
+            const btn = card.querySelector('button');
+            if (input) input.disabled = false;
+            if (btn) {
+              btn.disabled = false;
+              btn.innerText = 'Solve';
+            }
+          }
+        } else {
+          if (errDiv.innerText !== '') {
+            errDiv.innerText = '';
+            card.classList.remove('wrong-captcha');
+          }
+        }
+      });
+
+      const activeElement = document.activeElement;
+      if (!activeElement || !activeElement.classList.contains('captcha-input')) {
+        const firstInput = grid.querySelector('.captcha-input');
+        if (firstInput) {
+          firstInput.focus();
+        }
+      }
+    }
+
+    function handleInputKeydown(event, taskId) {
+      if (event.key === 'Enter') {
+        submitCaptcha(taskId);
+      }
+    }
+
+    async function submitCaptcha(taskId) {
+      const card = document.querySelector(`.captcha-card[data-id="${taskId}"]`);
+      if (!card) return;
+
+      const input = card.querySelector('.captcha-input');
+      const solution = input.value.trim();
+
+      if (!solution) {
+        showToast("Please enter captcha text", "danger");
+        input.focus();
+        return;
+      }
+
+      input.disabled = true;
+      const btn = card.querySelector('button');
+      btn.innerText = 'Sending...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/solve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: taskId, captcha: solution })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Solved captcha for Task #${taskId}`, "success");
+          loadTasks();
+          loadTreeView(); 
+        } else {
+          showToast(data.error || "Failed to submit solution", "danger");
+          input.disabled = false;
+          btn.innerText = 'Solve';
+          btn.disabled = false;
+          input.focus();
+        }
+      } catch (err) {
+        showToast("Server communication error", "danger");
+        input.disabled = false;
+        btn.innerText = 'Solve';
+        btn.disabled = false;
+        input.focus();
+      }
+    }
+
+    function renderTasksTable() {
+      const tbody = document.getElementById('tasks-table-body');
+      tbody.innerHTML = '';
+
+      currentTasks.forEach(task => {
+        const tr = document.createElement('tr');
+        
+        let statusBadge = `<span class="badge badge-${task.status}">${task.status.replace('_', ' ')}</span>`;
+        if (task.status === 'awaiting_captcha') {
+          statusBadge = `<span class="badge badge-awaiting_captcha pulse">manual solve</span>`;
+        } else if (task.status === 'ocr_solving') {
+          statusBadge = `<span class="badge badge-ocr_solving pulse">EasyOCR solving</span>`;
+        }
+
+        // OCR Column
+        let ocrCell = '<span style="color: var(--text-muted); font-size: 0.8rem;">-</span>';
+        if (task.ocr && task.ocr.lastPredictedText) {
+          let ocrClass = '';
+          if (task.ocr.status === 'auto_success') ocrClass = 'auto-success';
+          else if (task.ocr.status === 'failed_auto') ocrClass = 'failed-auto';
+
+          ocrCell = `
+            <button class="badge-ocr ${ocrClass}" onclick="openOcrModal(${task.id})" title="Click to inspect Captcha & OCR details">
+              ${task.ocr.lastPredictedText} 🔍
+            </button>
+          `;
+        } else if (task.ocr && task.ocr.status === 'ocr_running') {
+          ocrCell = `<span style="color: #c084fc; font-size: 0.75rem;" class="pulse">Decoding...</span>`;
+        }
+
+        let fileCell = '<span style="color: var(--text-muted);">None</span>';
+        if (task.status === 'completed' && task.fileName) {
+          fileCell = `
+            <a href="/downloads/${task.fileName}" class="btn-download" target="_blank">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              ${task.fileName.substring(0, 26)}...
+            </a>
+          `;
+        } else if (task.error) {
+          fileCell = `<span style="color: var(--accent-danger); font-size: 0.8rem; font-weight: 500;">${task.error}</span>`;
+        }
+
+        let actionCell = '';
+        if (task.status === 'failed' || task.status === 'completed') {
+          actionCell = `<button class="btn-table-action" onclick="retryTask(${task.id})">Restart</button>`;
+        } else {
+          actionCell = `<button class="ocr-inspect-btn" onclick="openOcrModal(${task.id})">Inspect</button>`;
+        }
+
+        tr.innerHTML = `
+          <td style="font-family: 'JetBrains Mono', monospace; font-weight: 600;">#${task.id}</td>
+          <td>${task.wardText}</td>
+          <td style="font-size: 0.8rem; color: var(--text-muted);">${task.pollingStationText}</td>
+          <td>${statusBadge}</td>
+          <td>${ocrCell}</td>
+          <td>${fileCell}</td>
+          <td>${actionCell}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function retryTask(taskId) {
+      try {
+        const res = await fetch(`/api/retry/${taskId}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Task #${taskId} queued for retry`, "success");
+          loadTasks();
+          loadTreeView();
+        } else {
+          showToast(data.error || "Retry failed", "danger");
+        }
+      } catch (err) {
+        showToast("Error communicating with server", "danger");
+      }
+    }
+
+    async function retryAllFailed() {
+      try {
+        const res = await fetch('/api/retry-all-failed', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Retried ${data.retriedCount} failed tasks`, "success");
+          loadTasks();
+          loadTreeView();
+        }
+      } catch (err) {
+        showToast("Error communicating with server", "danger");
+      }
+    }
+
+    async function stopAllTasks() {
+      try {
+        const res = await fetch('/api/stop-all', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Stopped all queued tasks", "success");
+          loadTasks();
+          loadTreeView();
+          document.getElementById('queue-btn').style.display = 'flex';
+          document.getElementById('queue-btn').innerText = 'Queue All 3,097 Tasks';
+          document.getElementById('queue-btn').disabled = false;
+        }
+      } catch (err) {
+        showToast("Error stopping tasks", "danger");
+      }
+    }
+
+    async function queueAllTasks() {
+      const btn = document.getElementById('queue-btn');
+      btn.innerText = 'Queueing...';
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/queue-all', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Queued all remaining ${data.addedCount} combinations!`, "success");
+          btn.style.display = 'none';
+          loadTasks();
+          loadTreeView();
+        }
+      } catch (err) {
+        showToast("Error communicating with server", "danger");
+        btn.innerText = 'Queue All 3,097 Tasks';
+        btn.disabled = false;
+      }
+    }
+
+    function showToast(message, type = "info") {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      
+      let icon = '';
+      if (type === 'success') {
+        icon = `<svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
+      } else if (type === 'danger') {
+        icon = `<svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+      } else {
+        icon = `<svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+      }
+
+      toast.innerHTML = `${icon} <span>${message}</span>`;
+      container.appendChild(toast);
+      
+      setTimeout(() => toast.classList.add('show'), 10);
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    const styleSheet = document.createElement("style");
+    styleSheet.innerText = `
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(styleSheet);
+
+    // Initial load
+    loadTasks();
+    loadTreeView();
+    
+    // Poll updates every 1 second
+    setInterval(() => {
+      loadTasks();
+    }, 1000);
+
+    // Refresh tree statuses every 3 seconds
+    setInterval(() => {
+      loadTreeView();
+    }, 3000);
+  </script>
+</body>
+</html>

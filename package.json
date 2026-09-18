@@ -1,0 +1,17 @@
+{
+  "name": "node-captcha-scraper",
+  "version": "1.0.0",
+  "description": "Multi-tab Kerala SEC Voter List Scraper with manual captcha resolver",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "inspect": "node inspect.js",
+    "combine": "node combine-excel.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "playwright": "^1.45.1",
+    "xlsx": "^0.18.5"
+  }
+}
