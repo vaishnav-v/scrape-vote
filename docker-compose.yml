@@ -1,0 +1,27 @@
+services:
+  scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kerala-sec-voter-scraper
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "3000"
+      DATA_DIR: "/app/data"
+      OCR_USE_WSL: "false"
+      PYTHON_BIN: "/opt/venv/bin/python"
+      PLAYWRIGHT_HEADLESS: "true"
+    volumes:
+      - ./data:/app/data
+      - easyocr_models:/root/.EasyOCR
+    shm_size: "1gb"
+
+volumes:
+  easyocr_models:
+

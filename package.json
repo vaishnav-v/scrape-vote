@@ -1,17 +1,45 @@
 {
-  "name": "node-captcha-scraper",
-  "version": "1.0.0",
-  "description": "Multi-tab Kerala SEC Voter List Scraper with manual captcha resolver",
-  "main": "server.js",
+  "name": "kerala-sec-voter-scraper",
+  "version": "2.0.0",
+  "description": "Scalable TypeScript scraper & web dashboard for Kerala State Election Commission (SEC) voter lists with EasyOCR captcha solving, manual fallback, and Excel export.",
+  "main": "dist/server.js",
   "type": "module",
-  "scripts": {
-    "start": "node server.js",
-    "inspect": "node inspect.js",
-    "combine": "node combine-excel.js"
+  "engines": {
+    "node": ">=20.0.0"
   },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "fetch-combinations": "tsx src/cli/fetch-combinations.ts",
+    "fetch-combinations:prod": "node dist/cli/fetch-combinations.js",
+    "combine": "tsx src/cli/combine-excel.ts",
+    "combine:prod": "node dist/cli/combine-excel.js"
+  },
+  "keywords": [
+    "kerala",
+    "sec",
+    "voter-list",
+    "scraper",
+    "playwright",
+    "easyocr",
+    "captcha",
+    "typescript",
+    "excel"
+  ],
+  "license": "MIT",
   "dependencies": {
+    "dotenv": "^16.4.7",
     "express": "^4.19.2",
-    "playwright": "^1.45.1",
-    "xlsx": "^0.18.5"
+    "playwright": "^1.62.0",
+    "xlsx": "^0.18.5",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
   }
 }

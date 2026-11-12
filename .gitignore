@@ -1,0 +1,35 @@
+# Dependencies & build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Environment & local config
+.env
+.env.*
+!.env.example
+
+# Generated runtime data & artifacts
+data/
+downloads/
+captchas/
+logs/
+*.log
+combinations.json
+tasks-state.json
+
+# Debug artifacts
+*.png
+*.tmp
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# OS & editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+

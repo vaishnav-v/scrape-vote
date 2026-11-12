@@ -1,0 +1,17 @@
+node_modules
+dist
+data
+downloads
+captchas
+logs
+*.log
+.git
+.env
+.env.*
+combinations.json
+tasks-state.json
+__pycache__
+.venv
+venv
+*.png
+
